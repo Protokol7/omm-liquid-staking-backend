@@ -1,0 +1,44 @@
+version: '3.7'
+
+services:
+  backend:
+    container_name: backend
+    build:
+      context: .
+      target: development # production | development
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    expose:
+      - ${PORT:-3001}
+    command: npm run start:dev # npm run start:dev | npm run start:prod NOTE: in production this should be commented out!
+#    env_file:
+#      - .env
+    networks:
+      - webnet
+    depends_on:
+      - mongodb
+      - nginx
+  nginx:
+    restart: always
+    build:
+      context: ./nginx
+    volumes:
+      - ./nginx/cache:/var/cache/nginx
+    ports:
+      - "80:80"
+    networks:
+      - webnet
+  mongodb:
+    image : mongo:latest
+    container_name: mongodb
+    volumes:
+      - ./database:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - webnet
+    restart: always
+networks:
+  webnet:
+    driver: bridge
