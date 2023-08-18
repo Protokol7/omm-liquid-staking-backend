@@ -10,7 +10,7 @@
     "build": "NODE_ENV=dev nest build",
     "build:prod": "NODE_ENV=prod nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "format:verify": "prettier . --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:verify": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "NODE_ENV=dev nest start --watch",
     "start:stage": "NODE_ENV=dev node dist/main",
