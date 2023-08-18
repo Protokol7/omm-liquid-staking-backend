@@ -11,7 +11,7 @@ services:
       - /usr/src/app/node_modules
     expose:
       - ${PORT:-3001}
-    command: npm run start:dev # npm run start:dev | npm run start:prod NOTE: in production this should be commented out!
+    command: npm run start:stage # npm run start:dev | npm run start:prod NOTE: in production this should be commented out!
 #    env_file:
 #      - .env
     networks:
