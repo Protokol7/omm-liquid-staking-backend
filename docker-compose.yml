@@ -10,10 +10,8 @@ services:
       - .:/usr/src/app
       - /usr/src/app/node_modules
     expose:
-      - ${PORT:-3001}
+      - "3001"
     command: npm run start:stage # npm run start:dev | npm run start:prod NOTE: in production this should be commented out!
-#    env_file:
-#      - .env
     networks:
       - webnet
     depends_on:
@@ -34,8 +32,8 @@ services:
     container_name: mongodb
     volumes:
       - ./database:/data/db
-    ports:
-      - "27017:27017"
+    expose:
+      - "27017"
     networks:
       - webnet
     restart: always
