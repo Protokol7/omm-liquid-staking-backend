@@ -15,7 +15,7 @@ const ENV = process.env.NODE_ENV || "dev";
         ConfigModule.forRoot({
             envFilePath: !ENV ? ".env" : `.env.${ENV}`,
         }),
-        MongooseModule.forRoot(`mongodb://mongodb:27017/${ENV === "prod" ? "production" : "development"}`, {
+        MongooseModule.forRoot(process.env.DATABASE_URL, {
             tlsInsecure: true,
         }),
         HttpModule,
