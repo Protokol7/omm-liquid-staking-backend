@@ -16,17 +16,21 @@ services:
       - webnet
     depends_on:
       - mongodb
-      - nginx
   nginx:
-    restart: always
-    build:
-      context: ./nginx
-    volumes:
-      - ./nginx/cache:/var/cache/nginx
+    image: jonasal/nginx-certbot:latest
+    restart: unless-stopped
+    environment:
+      - CERTBOT_EMAIL=robi.markac@protokol7.com
+    env_file:
+      - ./nginx-certbot.env
     ports:
       - "80:80"
-    networks:
-      - webnet
+      - "443:443"
+    volumes:
+      - nginx_secrets:/etc/letsencrypt
+      - ./user_conf.d:/etc/nginx/user_conf.d
+    depends_on:
+      - backend
   mongodb:
     image : mongo:latest
     container_name: mongodb
@@ -37,6 +41,9 @@ services:
     networks:
       - webnet
     restart: always
+
+volumes:
+  nginx_secrets:
 networks:
   webnet:
     driver: bridge
