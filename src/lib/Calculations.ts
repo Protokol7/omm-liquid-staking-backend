@@ -7,8 +7,8 @@ export abstract class Calculations {
         return unstakeInfoData.reduce((sum, current) => sum.plus(current.amount), new BigNumber(0));
     }
 
-    // Equation: sICX APY = (“Monthly inflation” * 12/”Voted Amount”) * (“Voter Reward Rate”/100)
-    // Equal to: (Iglobal * 12/ totalDelegated) * (Ivoter / 100)
+    // Equation: sICX APY = (“Monthly inflation” * 12/”Voted Amount”) * (“Voter Reward Rate”/100) * 0.9
+    // Equal to: (Iglobal * 12/ totalDelegated) * (Ivoter / 100) * 0.9
     public static calculateSicxApy(
         Iglobal: BigNumber,
         IVoter: BigNumber,
