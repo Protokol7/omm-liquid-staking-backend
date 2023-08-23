@@ -21,6 +21,9 @@ async function bootstrap() {
         methods: ["GET"],
     });
 
+    // prefix all paths
+    app.setGlobalPrefix("api/v1");
+
     app.useGlobalFilters(new AllExceptionsFilter());
 
     const config = new DocumentBuilder()
