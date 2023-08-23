@@ -7,6 +7,7 @@ import { HttpModule } from "@nestjs/axios";
 import { LiquidStakingStatsModule } from "./liquid-staking-stats/liquid-staking-stats-module";
 import { ScheduleModule } from "@nestjs/schedule";
 import { TasksModule } from "./tasks/tasks.module";
+import { ThrottlerModule } from "@nestjs/throttler";
 
 const ENV = process.env.NODE_ENV || "dev";
 
@@ -14,6 +15,10 @@ const ENV = process.env.NODE_ENV || "dev";
     imports: [
         ConfigModule.forRoot({
             envFilePath: !ENV ? ".env" : `.env.${ENV}`,
+        }),
+        ThrottlerModule.forRoot({
+            ttl: 60,
+            limit: 10,
         }),
         MongooseModule.forRoot(process.env.DATABASE_URL, {
             tlsInsecure: true,
