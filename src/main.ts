@@ -6,18 +6,19 @@ import { AllExceptionsFilter } from "./filters/AllExceptionsFilter";
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
-    const allowedDomains = ["https://dev.omm.finance", "https://app.omm.finance"];
-
     // enable cors
     app.enableCors({
-        origin: (origin, cb) => {
-            if (allowedDomains.includes(origin)) {
-                cb(null, origin);
-            } else {
-                cb(Error("invalid origin"));
-            }
-        },
-        methods: "GET,HEAD",
+        origin: [
+            "https://www.dev.omm.finance",
+            "https://www.app.omm.finance",
+            "http://www.dev.omm.finance",
+            "http://www.app.omm.finance",
+            "https://dev.omm.finance",
+            "https://app.omm.finance",
+            "http://dev.omm.finance",
+            "http://app.omm.finance",
+        ],
+        methods: ["GET"],
     });
 
     app.useGlobalFilters(new AllExceptionsFilter());
