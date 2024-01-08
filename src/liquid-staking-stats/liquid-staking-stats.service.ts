@@ -25,19 +25,22 @@ export class LiquidStakingStatsService {
 
     async snapshotLiquidStakingStats(): Promise<LiquidStakingStats> {
         const unstakeInfoData = await this.scoreService.getUnstakeInfo();
-        const iconNetworkInfo = await this.scoreService.getIconNetworkInfo();
+        const sIcxNetworDelegationkInfo = await this.scoreService.getSicxNetworkInfo();
         const stakingFeePercent = await this.scoreService.getStakingFeePercentage();
+
+        const sicxApy = Calculations.calculateSicxApy(
+            sIcxNetworDelegationkInfo.Iglobal,
+            sIcxNetworDelegationkInfo.Ivoter,
+            sIcxNetworDelegationkInfo.totalDelegated,
+            stakingFeePercent,
+        )
+            .dividedBy(100) // turn percent into decimal
+            .dp(STAKING_APY_DECIMALS, BigNumber.ROUND_HALF_UP);
 
         const totalUnstakingRequestSum = Calculations.calculateTotalUnstakingRequestSum(unstakeInfoData).dp(
             UNSTAKING_REQUESTS_DECIMALS,
             BigNumber.ROUND_DOWN,
         );
-        const sicxApy = Calculations.calculateSicxApy(
-            iconNetworkInfo.Iglobal,
-            iconNetworkInfo.Ivoter,
-            iconNetworkInfo.totalDelegated,
-            stakingFeePercent,
-        ).dp(STAKING_APY_DECIMALS, BigNumber.ROUND_HALF_UP);
 
         const currentDateString = Utils.getCurrentDateOnlyString();
         const dateOnlyNow = new Date(currentDateString);

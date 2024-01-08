@@ -150,6 +150,7 @@ export class ScoreMethodNames {
     public static GET_PREP = "getPRep";
     public static GET_IISS_INFO = "getIISSInfo";
     public static GET_NETWORK_INFO = "getNetworkInfo";
+    public static GET_DELEGATION = "getDelegation";
 
     public static GET_NAME = "name";
 }

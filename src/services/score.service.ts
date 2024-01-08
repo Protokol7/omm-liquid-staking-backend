@@ -10,8 +10,9 @@ import { Mapper } from "../common/mapper";
 import { CacheService } from "./cache.service";
 import { UnstakeInfoData } from "../models/class/UnstakeInfoData";
 import { HexString } from "../models/Types";
-import { IIconNetworkInfo } from "../models/interface/IIconNetworkInfo";
 import { IconNetworkInfo } from "../models/class/IconNetworkInfo";
+import { IISSInfo } from "../models/interface/IISSInfo";
+import { IDelegations } from "../models/interface/IDelegations";
 
 @Injectable()
 export class ScoreService {
@@ -66,20 +67,48 @@ export class ScoreService {
     }
 
     /**
-     * @description Get Icon blockchain network info
+     * @description Get network delegation info for sICX (not normalised!)
      */
-    public async getIconNetworkInfo(): Promise<IconNetworkInfo> {
+    public async getSicxNetworkInfo(): Promise<IconNetworkInfo> {
+        const [iissInfo, totalSicxDelegation] = await Promise.all([this.getIISSInfo(), this.getTotalSicxDelegation()]);
+
+        return Mapper.mapIconNetworkInfo(iissInfo, totalSicxDelegation);
+    }
+
+    /**
+     * @description Get Icon blockchain IISS network info
+     */
+    public async getIISSInfo(): Promise<IISSInfo> {
         const tx = this.iconApiService.buildTransaction(
             "",
             this.appService.getIissApiScoreAddress(),
-            ScoreMethodNames.GET_NETWORK_INFO,
+            ScoreMethodNames.GET_IISS_INFO,
             {},
             IconTransactionType.READ,
         );
 
-        const res: IIconNetworkInfo = await this.iconApiService.iconService.call(tx).execute();
+        return this.iconApiService.iconService.call(tx).execute();
+    }
 
-        return Mapper.mapIconNetworkInfo(res);
+    /**
+     * @description Get total delegation to sICX staking contract
+     */
+    public async getTotalSicxDelegation(): Promise<HexString> {
+        const allAddresses = await this.getAllAddresses();
+
+        const tx = this.iconApiService.buildTransaction(
+            "",
+            this.appService.getIissApiScoreAddress(),
+            ScoreMethodNames.GET_DELEGATION,
+            {
+                address: allAddresses.systemContract.Staking,
+            },
+            IconTransactionType.READ,
+        );
+
+        const res: IDelegations = await this.iconApiService.iconService.call(tx).execute();
+
+        return res.totalDelegated;
     }
 
     public async getAllAddresses(): Promise<AllAddresses> {

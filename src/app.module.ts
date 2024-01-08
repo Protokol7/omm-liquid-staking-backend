@@ -20,7 +20,7 @@ const ENV = process.env.NODE_ENV || "dev";
             ttl: 60,
             limit: 10,
         }),
-        MongooseModule.forRoot(process.env.DATABASE_URL, {
+        MongooseModule.forRoot(process.env.DATABASE_URL ?? "mongodb://localhost:27017/omm-dev", {
             tlsInsecure: true,
         }),
         HttpModule,
