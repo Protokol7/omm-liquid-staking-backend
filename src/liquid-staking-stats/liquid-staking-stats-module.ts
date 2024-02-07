@@ -6,14 +6,14 @@ import { LiquidStakingStats, LiquidStakingStatsSchema } from "./schemas/liquid-s
 import { ScoreService } from "../services/score.service";
 import { CacheService } from "../services/cache.service";
 import { IconApiService } from "../services/icon-api.service";
-import { AppService } from "../app.service";
 import { HttpModule } from "@nestjs/axios";
-import { ConfigService } from "@nestjs/config";
 import { LiquidStakingStatsController } from "./liquid-staking-stats-controller";
 import { CacheModule } from "@nestjs/cache-manager";
+import { EnvConfigModule } from "../config/env-config.module";
 
 @Module({
     imports: [
+        EnvConfigModule,
         HttpModule,
         MongooseModule.forFeature([
             { name: LiquidStakingStats.name, schema: LiquidStakingStatsSchema.plugin(mongoosePaginate) },
@@ -23,7 +23,7 @@ import { CacheModule } from "@nestjs/cache-manager";
         }),
     ],
     controllers: [LiquidStakingStatsController],
-    providers: [LiquidStakingStatsService, ScoreService, CacheService, IconApiService, AppService, ConfigService],
+    providers: [LiquidStakingStatsService, ScoreService, CacheService, IconApiService],
     exports: [LiquidStakingStatsService],
 })
 export class LiquidStakingStatsModule {}

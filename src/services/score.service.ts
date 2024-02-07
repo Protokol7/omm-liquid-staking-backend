@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import BigNumber from "bignumber.js";
 import { IconApiService } from "./icon-api.service";
-import { AppService } from "../app.service";
 import { ScoreMethodNames } from "../common/score-method-names";
 import { IconTransactionType } from "../models/enum/IconTransactionType";
 import { Utils } from "../common/utils";
@@ -13,12 +12,13 @@ import { HexString } from "../models/Types";
 import { IconNetworkInfo } from "../models/class/IconNetworkInfo";
 import { IISSInfo } from "../models/interface/IISSInfo";
 import { IDelegations } from "../models/interface/IDelegations";
+import { EnvConfigService } from "../config/env-config/env-config.service";
 
 @Injectable()
 export class ScoreService {
     constructor(
         private iconApiService: IconApiService,
-        private appService: AppService,
+        private envConfigService: EnvConfigService,
         private cacheService: CacheService,
     ) {
         this.fetchtAllScoreAddresses().then((res) => {
@@ -27,8 +27,8 @@ export class ScoreService {
     }
 
     /**
-     * @description Get all users unstake info
-     * @return  list of un-staking requests in Staking SCORE queue
+     * @description Get staking fee percentage in decimal notation (e.g. 0.1 = 10%)
+     * @return  Staking fee in decimal percentage (e.g. 0.1)
      */
     public async getStakingFeePercentage(): Promise<BigNumber> {
         const allAddresses = await this.getAllAddresses();
@@ -81,7 +81,7 @@ export class ScoreService {
     public async getIISSInfo(): Promise<IISSInfo> {
         const tx = this.iconApiService.buildTransaction(
             "",
-            this.appService.getIissApiScoreAddress(),
+            this.envConfigService.getIissApiScoreAddress(),
             ScoreMethodNames.GET_IISS_INFO,
             {},
             IconTransactionType.READ,
@@ -98,7 +98,7 @@ export class ScoreService {
 
         const tx = this.iconApiService.buildTransaction(
             "",
-            this.appService.getIissApiScoreAddress(),
+            this.envConfigService.getIissApiScoreAddress(),
             ScoreMethodNames.GET_DELEGATION,
             {
                 address: allAddresses.systemContract.Staking,
@@ -143,7 +143,7 @@ export class ScoreService {
     public async fetchtAllScoreAddresses(): Promise<AllAddresses> {
         const tx = this.iconApiService.buildTransaction(
             "",
-            this.appService.getAddressProviderScore(),
+            this.envConfigService.getAddressProviderScore(),
             ScoreMethodNames.GET_ALL_ADDRESSES,
             {},
             IconTransactionType.READ,

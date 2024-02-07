@@ -2,26 +2,14 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { AllExceptionsFilter } from "./filters/AllExceptionsFilter";
+import { OMM_DOMAINS } from "./common/constants";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
     // enable cors
     app.enableCors({
-        origin: [
-            "https://www.dev.omm.finance",
-            "https://www.app.omm.finance",
-            "https://www.test.omm.finance",
-            "http://www.dev.omm.finance",
-            "http://www.test.omm.finance",
-            "http://www.app.omm.finance",
-            "https://dev.omm.finance",
-            "https://test.omm.finance",
-            "https://app.omm.finance",
-            "http://dev.omm.finance",
-            "http://test.omm.finance",
-            "http://app.omm.finance",
-        ],
+        origin: OMM_DOMAINS,
         methods: ["GET"],
     });
 

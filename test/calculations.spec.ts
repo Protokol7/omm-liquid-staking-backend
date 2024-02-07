@@ -4,17 +4,6 @@ import { UnstakeInfoData } from "../src/models/class/UnstakeInfoData";
 import { Utils } from "../src/common/utils";
 
 describe("Calculations tests", () => {
-    // Network info data
-    let IGlobal: BigNumber;
-    let Ivoter: BigNumber;
-    let totalDelegated: BigNumber;
-
-    beforeEach(async () => {
-        IGlobal = new BigNumber("3000000");
-        Ivoter = new BigNumber("77");
-        totalDelegated = new BigNumber("433494628.6989329");
-    });
-
     it("Test correctness of calculateTotalUnstakingRequestSum", () => {
         const result = Calculations.calculateTotalUnstakingRequestSum([
             new UnstakeInfoData(1, new BigNumber(10), new BigNumber(2555555), "", ""),
@@ -32,7 +21,7 @@ describe("Calculations tests", () => {
         const Ivoter = new BigNumber("77");
         const totalDelegated = new BigNumber("433494628.6989329");
         const stakingFeePercent = new BigNumber("0.1");
-        const result = Calculations.calculateSicxApy(IGlobal, Ivoter, totalDelegated, stakingFeePercent);
+        const result = Calculations.calculateStakingAprOld(IGlobal, Ivoter, totalDelegated, stakingFeePercent);
         const trueResult = new BigNumber("0.05755088609719932");
 
         expect(result.toNumber()).toBeCloseTo(trueResult.toNumber());
@@ -44,8 +33,19 @@ describe("Calculations tests", () => {
         const iVoter = new BigNumber("0x4d");
         const stakingFeePercent = new BigNumber("0.1");
 
-        const result = Calculations.calculateSicxApy(iGlobal, iVoter, totalDelegated, stakingFeePercent);
+        const result = Calculations.calculateStakingAprOld(iGlobal, iVoter, totalDelegated, stakingFeePercent);
         const trueResult = new BigNumber("13.820250281507718");
+
+        expect(result.toNumber()).toBeCloseTo(trueResult.toNumber());
+    });
+
+    it("Test correctness of calculateStakingApr from lisbon IscoreSnapshot event", () => {
+        const icxToClaim = Utils.hexToNormalisedNumber("0x2731f0bdd8035151284");
+        const totalDelegation = Utils.hexToNormalisedNumber("0x18d34bb984e971c04732b");
+        const stakingFeePercent = new BigNumber("0.1");
+
+        const result = Calculations.calculateStakingApr(icxToClaim, stakingFeePercent, totalDelegation);
+        const trueResult = new BigNumber("2.025961352441791");
 
         expect(result.toNumber()).toBeCloseTo(trueResult.toNumber());
     });

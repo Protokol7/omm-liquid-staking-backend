@@ -6,7 +6,9 @@ import { LiquidStakingStatsService } from "../liquid-staking-stats/liquid-stakin
 export class TasksService {
     private readonly logger = new Logger(TasksService.name);
 
-    constructor(private readonly unstakingRequestsService: LiquidStakingStatsService) {}
+    constructor(private readonly unstakingRequestsService: LiquidStakingStatsService) {
+        console.log("TasksService initialized..");
+    }
 
     @Cron("0 59 5,11,17,23 * * *")
     async handleCron() {

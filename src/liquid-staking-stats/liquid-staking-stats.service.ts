@@ -9,6 +9,10 @@ import { PaginateModel, PaginateResult } from "mongoose";
 import { Calculations } from "../lib/Calculations";
 import BigNumber from "bignumber.js";
 import { STAKING_APY_DECIMALS, UNSTAKING_REQUESTS_DECIMALS } from "../common/constants";
+import { EnvConfigService } from "../config/env-config/env-config.service";
+import { lastValueFrom } from "rxjs";
+import { HttpService } from "@nestjs/axios";
+import { IEventLog } from "../models/interface/IEventLog";
 
 @Injectable()
 export class LiquidStakingStatsService {
@@ -16,6 +20,8 @@ export class LiquidStakingStatsService {
         @InjectModel(LiquidStakingStats.name)
         private readonly liquidStakingStatstModel: PaginateModel<LiquidStakingStats>,
         private scoreService: ScoreService,
+        private envConfig: EnvConfigService,
+        private http: HttpService,
     ) {}
 
     async create(unstakingRequestDto: LiquidStakingStatsDto): Promise<LiquidStakingStats> {
@@ -25,17 +31,8 @@ export class LiquidStakingStatsService {
 
     async snapshotLiquidStakingStats(): Promise<LiquidStakingStats> {
         const unstakeInfoData = await this.scoreService.getUnstakeInfo();
-        const sIcxNetworDelegationkInfo = await this.scoreService.getSicxNetworkInfo();
-        const stakingFeePercent = await this.scoreService.getStakingFeePercentage();
 
-        const sicxApy = Calculations.calculateSicxApy(
-            sIcxNetworDelegationkInfo.Iglobal,
-            sIcxNetworDelegationkInfo.Ivoter,
-            sIcxNetworDelegationkInfo.totalDelegated,
-            stakingFeePercent,
-        )
-            .dividedBy(100) // turn percent into decimal
-            .dp(STAKING_APY_DECIMALS, BigNumber.ROUND_HALF_UP);
+        const stakingApr = (await this.getStakingApr()).dp(STAKING_APY_DECIMALS, BigNumber.ROUND_HALF_UP);
 
         const totalUnstakingRequestSum = Calculations.calculateTotalUnstakingRequestSum(unstakeInfoData).dp(
             UNSTAKING_REQUESTS_DECIMALS,
@@ -51,17 +48,36 @@ export class LiquidStakingStatsService {
         // if unstake request for given date exist, update it
         if (liquidStakingStats) {
             liquidStakingStats.data.push(
-                new LiquidStakingStatsDataDto(dateTimeNow, totalUnstakingRequestSum.toNumber(), sicxApy.toNumber()),
+                new LiquidStakingStatsDataDto(dateTimeNow, totalUnstakingRequestSum.toNumber(), stakingApr.toNumber()),
             );
 
             return liquidStakingStats.save();
         } else {
             // create new one
             const newUnstakingRequest = new LiquidStakingStatsDto(dateOnlyNow, [
-                new LiquidStakingStatsDataDto(dateTimeNow, totalUnstakingRequestSum.toNumber(), sicxApy.toNumber()),
+                new LiquidStakingStatsDataDto(dateTimeNow, totalUnstakingRequestSum.toNumber(), stakingApr.toNumber()),
             ]);
 
             return this.create(newUnstakingRequest);
+        }
+    }
+
+    async getStakingApr(): Promise<BigNumber> {
+        const stakingScoreAddress = (await this.scoreService.getAllAddresses()).systemContract.Staking;
+        const iconTrackerApiUrl = this.envConfig.getIconTrackerApiUrl();
+        const url = `${iconTrackerApiUrl}/logs?limit=1&address=${stakingScoreAddress}&method=IscoreSnapshot`;
+        const res = await lastValueFrom(this.http.get<IEventLog[]>(url));
+
+        if ((res.data?.length ?? 0) > 0) {
+            const lastIscoreSnapshot: IEventLog = res.data[0];
+            const indexed = JSON.parse(lastIscoreSnapshot.indexed);
+            const icxToClaim = Utils.hexToNormalisedNumber(indexed[2]); // rewards
+            const totalDelegation = Utils.hexToNormalisedNumber(indexed[3]); // totalStaked
+            const stakingFeePercent = await this.scoreService.getStakingFeePercentage();
+
+            return Calculations.calculateStakingApr(icxToClaim, stakingFeePercent, totalDelegation);
+        } else {
+            return new BigNumber(0);
         }
     }
 

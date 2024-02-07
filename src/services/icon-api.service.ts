@@ -1,13 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import BigNumber from "bignumber.js";
 import { IconTransactionType } from "../models/enum/IconTransactionType";
-import { AppService } from "../app.service";
 import { Utils } from "../common/utils";
 import IconService from "icon-sdk-js";
 const { IconConverter, IconAmount, IconBuilder } = IconService;
 const { CallBuilder, CallTransactionBuilder, IcxTransactionBuilder } = IconBuilder;
 import { Hash } from "icon-sdk-js/build/types/hash";
 import { HttpService } from "@nestjs/axios";
+import { EnvConfigService } from "../config/env-config/env-config.service";
 
 @Injectable()
 export class IconApiService {
@@ -16,8 +16,8 @@ export class IconApiService {
 
     public stepCost = 20000000;
 
-    constructor(private http: HttpService, private appService: AppService) {
-        this.httpProvider = new IconService.HttpProvider(this.appService.getIconRpcUrl());
+    constructor(private http: HttpService, private envConfig: EnvConfigService) {
+        this.httpProvider = new IconService.HttpProvider(this.envConfig.getIconRpcUrl());
         this.iconService = new IconService(this.httpProvider);
     }
 
@@ -45,12 +45,12 @@ export class IconApiService {
         transactionType: IconTransactionType,
         icxValue: BigNumber | string = "0x0",
     ): any {
-        let tx = null;
+        let tx;
         const timestamp = new Date().getTime() * 1000;
         const nonce = IconConverter.toHex(IconConverter.toBigNumber(1));
         const stepLimit = IconConverter.toHex(IconConverter.toBigNumber(this.stepCost));
         const version = IconConverter.toHex(IconConverter.toBigNumber(3));
-        const nid = IconConverter.toHex(IconConverter.toBigNumber(this.appService.getNid()));
+        const nid = IconConverter.toHex(IconConverter.toBigNumber(this.envConfig.getNid()));
         icxValue = !Utils.isHex(icxValue)
             ? IconConverter.toHex(IconAmount.of(icxValue, IconAmount.Unit.ICX).toLoop())
             : icxValue;
@@ -97,7 +97,7 @@ export class IconApiService {
 
     public async estimateStepCost(tx: any): Promise<BigNumber | undefined> {
         const estimateStepCostPromise = this.http
-            .post<number>(this.appService.getIconDebugRpcUrl(), {
+            .post<number>(this.envConfig.getIconDebugRpcUrl(), {
                 jsonrpc: "2.0",
                 method: "debug_estimateStep",
                 id: 1234,

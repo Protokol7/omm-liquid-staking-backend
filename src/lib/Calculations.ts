@@ -9,7 +9,7 @@ export abstract class Calculations {
 
     // Equation: sICX APY = (“Monthly inflation” * 12/”Voted Amount”) * (“Voter Reward Rate”/100) * 0.9
     // Equal to: (Iglobal * 12/ totalDelegated) * (Ivoter / 100) * 0.9
-    public static calculateSicxApy(
+    static calculateStakingAprOld(
         Iglobal: BigNumber,
         IVoter: BigNumber,
         totalDelegated: BigNumber,
@@ -19,5 +19,15 @@ export abstract class Calculations {
             .dividedBy(totalDelegated)
             .multipliedBy(IVoter.dividedBy(PERCENT_DENOMINATOR))
             .multipliedBy(ONE.minus(stakingFeePercent));
+    }
+
+    static calculateStakingApr(icxToClaim: BigNumber, feePercentage: BigNumber, totalDelegation: BigNumber): BigNumber {
+        if (totalDelegation.isZero() || icxToClaim.isZero() || feePercentage.isZero()) {
+            return new BigNumber(0);
+        }
+
+        const feeCut = icxToClaim.minus(icxToClaim.multipliedBy(feePercentage));
+
+        return feeCut.dividedBy(totalDelegation).multipliedBy(365);
     }
 }
