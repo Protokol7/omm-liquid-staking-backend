@@ -23,4 +23,5 @@ export const OMM_DOMAINS: string[] = [
     "http://dev.omm.finance",
     "http://test.omm.finance",
     "http://app.omm.finance",
+    "https://omm-liquid-staking-frontend.vercel.app",
 ];
