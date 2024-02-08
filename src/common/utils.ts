@@ -1,8 +1,20 @@
 import IconService from "icon-sdk-js";
 import { BigNumber } from "bignumber.js";
+import { IScoreSnapshot } from "../models/interface/IScoreSnapshot";
+import { IEventLog } from "../models/interface/IEventLog";
 
 export class Utils {
     public static ZERO = new BigNumber("0");
+
+    public static parseIscoreSnapshot(event: IEventLog): IScoreSnapshot {
+        const indexed = JSON.parse(event.indexed);
+
+        return {
+            blockHeight: Utils.hexToBigNumber(indexed[1]),
+            icxToClaim: Utils.hexToNormalisedNumber(indexed[2]),
+            totalDelegation: Utils.hexToNormalisedNumber(indexed[3]),
+        };
+    }
 
     public static handleSmallDecimal(num: BigNumber): string {
         if (num.isGreaterThanOrEqualTo(new BigNumber("0.005"))) {

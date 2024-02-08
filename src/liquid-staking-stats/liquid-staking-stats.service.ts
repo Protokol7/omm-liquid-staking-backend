@@ -8,11 +8,12 @@ import { Utils } from "../common/utils";
 import { PaginateModel, PaginateResult } from "mongoose";
 import { Calculations } from "../lib/Calculations";
 import BigNumber from "bignumber.js";
-import { STAKING_APY_DECIMALS, UNSTAKING_REQUESTS_DECIMALS } from "../common/constants";
+import { BLOCKS_PER_DAY, STAKING_APY_DECIMALS, UNSTAKING_REQUESTS_DECIMALS } from "../common/constants";
 import { EnvConfigService } from "../config/env-config/env-config.service";
 import { lastValueFrom } from "rxjs";
 import { HttpService } from "@nestjs/axios";
 import { IEventLog } from "../models/interface/IEventLog";
+import { IScoreSnapshot } from "../models/interface/IScoreSnapshot";
 
 @Injectable()
 export class LiquidStakingStatsService {
@@ -65,17 +66,28 @@ export class LiquidStakingStatsService {
     async getStakingApr(): Promise<BigNumber> {
         const stakingScoreAddress = (await this.scoreService.getAllAddresses()).systemContract.Staking;
         const iconTrackerApiUrl = this.envConfig.getIconTrackerApiUrl();
-        const url = `${iconTrackerApiUrl}/logs?limit=1&address=${stakingScoreAddress}&method=IscoreSnapshot`;
+        const url = `${iconTrackerApiUrl}/logs?limit=2&address=${stakingScoreAddress}&method=IscoreSnapshot`;
         const res = await lastValueFrom(this.http.get<IEventLog[]>(url));
+        const stakingFeePercent = await this.scoreService.getStakingFeePercentage();
 
         if ((res.data?.length ?? 0) > 0) {
-            const lastIscoreSnapshot: IEventLog = res.data[0];
-            const indexed = JSON.parse(lastIscoreSnapshot.indexed);
-            const icxToClaim = Utils.hexToNormalisedNumber(indexed[2]); // rewards
-            const totalDelegation = Utils.hexToNormalisedNumber(indexed[3]); // totalStaked
-            const stakingFeePercent = await this.scoreService.getStakingFeePercentage();
+            let icxToClaim;
+            const lastIscoreSnapshot: IScoreSnapshot = Utils.parseIscoreSnapshot(res.data[0]);
 
-            return Calculations.calculateStakingApr(icxToClaim, stakingFeePercent, totalDelegation);
+            if (res.data.length == 2) {
+                const prevIscoreSnapshot: IScoreSnapshot = Utils.parseIscoreSnapshot(res.data[1]);
+                const blockHeightDiff = lastIscoreSnapshot.blockHeight.minus(prevIscoreSnapshot.blockHeight);
+                const daysDiff = blockHeightDiff.dividedBy(BLOCKS_PER_DAY);
+
+                // if day diff is gt than 1, divide icxToClaim by number of the days
+                icxToClaim = daysDiff.gt(1)
+                    ? lastIscoreSnapshot.icxToClaim.dividedBy(daysDiff)
+                    : lastIscoreSnapshot.icxToClaim;
+            } else {
+                icxToClaim = lastIscoreSnapshot.icxToClaim;
+            }
+
+            return Calculations.calculateStakingApr(icxToClaim, stakingFeePercent, lastIscoreSnapshot.totalDelegation);
         } else {
             return new BigNumber(0);
         }
