@@ -9,7 +9,7 @@ export class EnvConfigService {
 
     getEnvVariables(): string {
         return `
-            ENV=${this.getEnv()}\n
+            NODE_ENV=${this.getEnv()}\n
             ICON_RPC_URL=${this.getIconRpcUrl()}\n
             ICON_TRACKER_API=${this.getIconTrackerApiUrl()}\n
             ICON_DEBUG_RPC_URL=${this.getIconDebugRpcUrl()}\n
@@ -20,10 +20,10 @@ export class EnvConfigService {
     }
 
     getEnv(): string {
-        const env = this.configService.get<string>("ENV");
+        const env = this.configService.get<string>("NODE_ENV");
 
         if (env == undefined) {
-            throw new Error("ENV undefined!");
+            throw new Error("NODE_ENV undefined!");
         }
 
         return env;
