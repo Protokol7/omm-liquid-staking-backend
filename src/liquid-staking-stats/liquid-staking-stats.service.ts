@@ -79,8 +79,8 @@ export class LiquidStakingStatsService {
                 const blockHeightDiff = lastIscoreSnapshot.blockHeight.minus(prevIscoreSnapshot.blockHeight);
                 const daysDiff = blockHeightDiff.dividedBy(BLOCKS_PER_DAY);
 
-                // if day diff is gt than 1, divide icxToClaim by number of the days
-                icxToClaim = daysDiff.gt(1)
+                // if day diff is gt than 2, divide icxToClaim by number of the days
+                icxToClaim = daysDiff.gt(2)
                     ? lastIscoreSnapshot.icxToClaim.dividedBy(daysDiff)
                     : lastIscoreSnapshot.icxToClaim;
             } else {
